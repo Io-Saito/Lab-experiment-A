@@ -1,0 +1,28 @@
+  graph TD
+    1("溶液(一日放置)")
+    2(塩化マグネシウム水溶液)
+    3(DNase)
+　　4("37℃,10min")
+    5(酢酸水溶液)
+    6("2-プロパノール")
+    7(チューブA)
+    8(チューブB)
+    9(反応後溶液)
+    10(DNA溶液)
+    classDef subs fill:#fcf,stroke:#f9f; 
+    classDef container fill:#cff,stroke:#6cc;
+    classDef operation fill:#ccf;
+
+    class 1,2,3,5,6,9,10 subs;
+    class 7,8 container;
+    class 4 operation;
+
+    2-->|それぞれに5μL|1
+    1-->7
+    1-->8
+    3-->|50μL|8
+    7-->4
+    8-->4
+    4-->9
+    5-->|それぞれに0.1ｍL|9
+    6-->|それぞれに0.7ｍL|9-->10

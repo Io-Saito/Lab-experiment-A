@@ -1,0 +1,31 @@
+  graph TD
+    1(Bacto-peptpne 0.5g)
+    2(yeast-extract 0.5g)
+    3(NaCl 0.25g)
+    4(200mLひだ付きフラスコ)
+    5("加圧蒸気滅菌(121℃,20min)")
+    6(大腸菌)
+    7(培地)
+    8(蒸留水50mL)
+    9(溶解)
+    10("振とう培養(37℃,120rpm,48時間)")
+
+    classDef subs fill:#fcf,stroke:#f9f; 
+    classDef container fill:#cff,stroke:#6cc;
+    classDef operation fill:#ccf;
+    class 1,2,3,6,7,8 subs;
+    class 4 container;
+    class 5,9,10 operation;
+
+    1-->4
+    2-->4
+    3-->4
+    4-->9
+    8-->9
+    9-->|シリコン栓で蓋をする|5-->7
+    subgraph 安全キャビネット内
+    6-->|植菌|7
+    end
+    7-->10
+
+     

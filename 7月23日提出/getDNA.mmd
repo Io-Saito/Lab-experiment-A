@@ -1,0 +1,32 @@
+  graph TD
+    1(培養液)
+    2(遠心分離チューブ)
+    3("遠心分離(6000G,10min)")
+    4(上清)
+    5(破棄)
+    6(菌体)
+    7(TE溶液)
+    8(懸濁)
+    9(懸濁液)
+    10(SDS溶液)
+    11(プロテナーゼK溶液)
+    12("反応(37℃,30min)")
+    24(反応後溶液)
+    
+
+    classDef subs fill:#fcf,stroke:#f9f; 
+    classDef container fill:#cff,stroke:#6cc;
+    classDef operation fill:#ccf;
+    class 1,4,6,7,9,10,11,13,14,24,25,17,21,23 subs;
+    class 2,20,22 container;
+    class 3,5,8,12,15,16,18 operation;
+
+    1-->|40mL|2-->3
+    3-->4-->5
+    3-->6
+    6-->8
+    7-->|9.5mL|8-->9
+    10-->|0.5mL|9
+    11-->|50μL|9
+    9-->12-->24
+    

@@ -1,0 +1,5 @@
+\begin{verbatim}
+（蓄積速度）= (流入)　-　(流出)　＋　(反応で生成した分)
+\end{verbatim}
+\[0= v_{t0}\si{m^{3}/s}$\cdot$C_{A,i-1}\si{mol/m^{3}}-v_{t0}\si{m^{3}/s}$\cdot$C_{A,i}\si{mol/m^{3}}+r_{Ai}\si{mol/m^{3}.s}$\cdot$$\cfrac{V}{N}$\si{m^{3}}\]
+\usepackage{amsmath,amththm,bm,amssymb,extarrows,siunitx}

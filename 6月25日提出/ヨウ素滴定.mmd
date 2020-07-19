@@ -1,0 +1,30 @@
+graph TD
+
+nd1(ヨウ素溶液);
+nd2(蒸留水);
+nd3(澱粉水溶液);
+nd4(非滴定溶液);
+nd5(0.1Mチオ硫酸Na水溶液);
+nd6[/溶液が無色/];
+nd7[終了];
+nd8{定容};
+nd9{添加};
+nd10{滴定};
+
+subgraph 250mLメスフラスコ
+nd1-->nd8
+end
+nd8-->|50mLビーカー3個に移す|nd9
+subgraph 50mLビーカー
+nd9-->nd4
+end
+nd2-->nd8
+
+nd3-->|2,3滴|nd9
+nd4-->nd10
+nd5-->nd10
+nd10-->nd6
+nd6-->|NO|nd10
+nd6-->|YES|nd7
+
+

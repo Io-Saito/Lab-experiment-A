@@ -1,0 +1,29 @@
+  graph TD
+    24(反応後溶液)
+    13(NaCl溶液)
+    14("CTAB溶液(65℃に予温)")
+    15(攪拌)
+    16("加熱(65℃,20min)")
+    17(混合溶媒)
+    18("遠心分離(6000G,10min)")
+    20(15mLプラスチックチューブ2本)
+    21(2-プロパノール)
+    22(マイクロチューブ)
+    23(TE溶液)
+    27(一日放置)
+
+    classDef subs fill:#fcf,stroke:#f9f; 
+    classDef container fill:#cff,stroke:#6cc;
+    classDef operation fill:#ccf;
+
+    class 13,14,24,25,17,21,23 subs;
+    class 20,22 container;
+    class 15,16,18,27 operation;
+
+    13-->|1.8mL|24
+    14-->|1.5mL|24
+    24-->15-->16
+    17-->|13.3mL|18
+    16-->18-->|分離後各3mL移す|20
+    21-->|移した後加える|20-->|中間層のみ移す|22
+    23-->|1mL|22-->27
