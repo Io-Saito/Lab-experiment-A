@@ -1,0 +1,861 @@
+---
+title: テーマK　化学数値計算
+date: 2020/7/30
+author: B8TB3040 斉藤依緒
+output:
+  pdf_document:
+    latex_engine: lualatex
+documentclass: ltjsarticle
+indented-code-classes: Visual Basic
+highlight-style: pygments
+filters:
+  - pandoc-crossref
+header-includes: \usepackage[margin=1in]{geometry}
+---
+
+## 1.諸言
+
+今回の実験は、主に二成分系の気液平衡に関して諸物理量を Microsoft VBA を用いて計算することで数値解析の手法・並びに基礎的なプログラミングについて学ぶことを目的としている。化学実験において得られたデータは適切な方法で解析しなければ意味を持たず、これには計算機が不可欠である。  
+また、化学においては「何かの変化量」と「何かの変化量」の関係・すなわち微分方程式が多く登場する。大半の微分方程式は解析的に解くことができないが、数値的に近似解を求めることは可能である。今回の実験ではこれらの微分方程式における求根法を習得する。
+
+## ２.Excel VBA の言語体系
+
+Visual Basic とは Microsoft 社が開発したプログラミング言語であり、Excel などの Microsoft 社によって提供されるアプリケーションを VB によって動作させることが可能である。これが VBA(Visual Basic for Application)である。  
+VBA は BASIC と似た言語体系を持ち、他のプログラミング言語と同様に変数宣言・関数定義・条件分岐・繰り返し・出力が可能である。ここでは上記のそれぞれについて言及する。
+
+#### 変数
+
+VBA におけるデータ型は整数型(integer,long)，実数型(single,double)，文字列型(char)，論理型(boolean)があり、これらは変数の定義ごとに指定される。指定の書式は以下の通りである。
+
+```visual basic
+ Dim [変数名]　as [データ型]
+
+' 例(倍精度浮動小数点型のANを定義)
+
+Dim AN as double
+
+'ANに3を代入
+
+AN＝3
+```
+
+変数は関数内で定義すると関数の呼び出しが終わったと同時に破棄されるローカル変数、関数外で定義するとどの関数からでも呼び出すことのできるグローバル変数となる。  
+それぞれのデータ型については長さが決められており、使用できる桁数も異なる。これについて以下の表に示す。
+
+| データ型 | 表記    | 長さ(byte)      | 範囲                      |
+| -------- | ------- | --------------- | ------------------------- |
+| 整数型   | integer | 2               | -32768~32768              |
+| 〃       | long    | 4               | -2147483648~2147483648    |
+| 実数型   | single  | 4               | (10 進数で)有効数字 7 桁  |
+| 〃       | double  | 8               | (10 進数で)有効数字 16 桁 |
+| 文字列型 | char    | 1(一文字あたり) | 32767byte まで            |
+| 論理型   | boolean | 1               | True/False                |
+
+整数型のデータについては、2byte ＝ 16bit のうち 1bit が符号の表記に使われるため、残りの 15 桁で絶対値を表す。実数型は符号 s・仮数 a・基数 b・指数 p の形で以下のように表される。また、コンピューター上では基数は２であるため、s に 1bit,p と a にはそれぞれのデータ長に合わせたビット長が割り当てられる。
+
+$$s(±) a\times b^p $$
+
+例えば single 型ではデータ長が 32bit であり、そのうち 8bit が p、23bit が a に割り当てられるため 2 進数で 23 桁＝ 10 進数で７.22 桁の精度で小数を記述することができる。
+
+#### 関数
+
+Visual Basic において関数に当たるものはプロシージャである。これは複数の命令をひとまとめにしたものであり、sub プロシージャと function プロシージャがある。sub プロシージャは部品化したプログラムであるサブルーチンを定義し、任意のタイミングでサブルーチンを呼び出すことでプログラムの流れを変え、優先順位の高いものから処理を行うことができる。この仕組みはアセンブリ言語と類似しており、　 Visual Basic がアセンブリと類似した　 BASIC を元にしていることが伺える。
+
+```Visual Basic
+'沸点を求めるsubプロシージャ
+Sub bp()
+
+'ここで処理が記述される
+
+End sub
+```
+
+function プロシージャは多くのサブルーチンから呼び出される関数を予め定義しておくものであり、適切に用いることで冗長なコードを短縮することができる。
+
+```Visual Basic
+'サブルーチンから呼び出し
+Sub example()
+  '半径Rを定義
+  Dim R as single
+  'Rに3を代入
+  R=3
+  vol_example=ball(R)
+End Sub
+
+'球の体積を求める関数を定義
+Function ball＿volume(r)
+  vol=4/3*r ^ 3
+End Function
+
+```
+
+以上から、VisualBasic は低級言語に類似した文法を持ちながらも高級言語のような関数定義が行える言語であると言える。
+
+#### 制御文
+
+VisualBasic の制御文のうち、今回用いた For 文、If 文について説明する。If 文は英語の If・・・Else・・・同様にもし・・・なら・・・し、もし・・・なら・・・する、という条件分岐命令である。記法は以下の通りである。
+
+```Visual Basic
+'Tc-Tの絶対値が20以下かそうでないかで分岐
+
+If Abs(Tc - T) < 20 Then
+’True時の処理
+GoTo finish
+Else
+’False時の処理
+T = T + 5
+End If
+```
+
+また、Else 以降にさらに If 文をつなげることで多くの条件に対して異なる処理を結びつけることが可能である。この際、最初の If から最後の Else までが一つのブロックとみなされる。
+
+For 文は予めカウンターを定義しておき、指定した回数まで繰り返し処理を行う制御文である。
+
+```Visual Basic
+
+'カウンター定義
+Dim n as as integer
+
+'100回行う処理
+For n=1 To 100
+
+'処理内容が記述される
+
+'カウンターを＋１
+Next i
+
+```
+
+For と If を組み合わせることで、If の条件を満たすまで計算を繰り返すといった処理も可能である。今回の数値計算において Newton 法・はさみうち法といった求根法で用いた。
+
+#### 入出力
+
+Excel VBA は Excel 上の処理を記述するため、Excel シートからの入出力に対応している。これはコード内でセルをしてすることで実現される。この方法はプログラム内で使われる定数を後から変更する際に便利な方法である。
+
+```Visual Basic
+
+'(5A)のセルの中身をANに代入
+AN = Cells(5, 1).Value
+
+'Tを(5C)のセルに出力
+Cells(５, 3) = T
+
+```
+
+## 3.数値解析アルゴリズム
+
+#### Newton 法
+
+Newton 法は、目的とする関数の接線と x 軸の交点を再帰的に求めることで解の近似値を得る方法である。
+
+![Newton法](newton法.png){height=60mm}
+
+$f(x)$の導関数を$f'(x)$とすると初期値$x_0$における関数$f(x)$の接線$l_0$は$(x_0,f(x_0))$を通る傾き$f'(x_0)$の直線であるため
+
+$$l_0(x)=f'(x_0)(x-x_0)-f(x_0)$$
+
+と$x$の一次関数で表される。この時$l_0$と$x$軸の交点を新たに$x_1$とおけば
+
+$$x_1=x_{0}-\frac{f\left(x_{0}\right)}{f^{\prime}\left(x_{0}\right)}$$
+
+と表される。これを漸化式で表すと
+
+$$x_{n+1}=x_{n}-\frac{f\left(x_{n}\right)}{f^{\prime}\left(x_{n}\right)}$$
+
+となる。$x_n$が十分解に近い時、$x_n\approx x_{n+1}$となるため、収束条件を以下のように定める。ここで$\epsilon$は十分小さい整数である。
+
+$$\left|\frac{f\left(x_{n}\right)}{f^{\prime}\left(x_{n}\right)}\right|<\epsilon$$
+
+#### はさみうち法
+
+はさみうち法は二分法とも呼ばれる求解アルゴリズムである。はじめに初期値$x_L,x_H$を決定し、各初期値とその中点$x_M$で$f(x)$を求める。ここで、$f(x_L),f(x_M)$の符号が異なれば解は$x_L<x<x_M$を満たし、$f(x_M),f(x_H)$の符号が異なれば解は$x_M<x<x_H$の範囲にある。ここで狭まった範囲のうち小さいものを$x_L$,大きいものを$x_H$と設定し直して同様に範囲を狭めていく方法である。  
+はさみうち法は予め解に見当がついている際に有効である。
+
+![はさみうち法](二分法.png)
+
+## 4.結果と考察
+
+計算に用いたプログラムのソースコードは末尾に添付した。
+
+### (1)水およびエタノールの蒸気圧曲線
+
+水・エタノールの蒸気圧を求める過程は以下に示したフローチャートの通りである。この時、温度の単位は[K],初期値は 323.15[K]を用いた。
+また、Antoine 式は以下の通りである。A,B,C は物質に固有のパラメーターである。
+
+$$P_0=exp\left(A+\cfrac{B}{CT}\right) \times 10^{-6}\mathrm{[MPa]}~~~~：式1$$
+
+![水・エタノール蒸気圧](名称未設定ファイル.png){height=80mm}
+
+得られたグラフはそれぞれ以下の通りである。
+
+![水　蒸気圧曲線](図2.png){height=60mm}
+
+![エタノール　蒸気圧曲線](図1.png){height=60mm}
+
+以上の図の縦軸から、エタノールの方が水よりも蒸気圧が低い、つまり揮発しやすいことがわかる。また指数関数状の単調増加の曲線で蒸気圧が増大する傾向は共通しており、こ Antoine 式が指数関数型であるためであると考える。
+
+### (2)水およびエタノールの沸点
+
+沸点の計算にあたり、求根法として Newton 法を用いた。Netwon 法は３節で示した通りの方法である。沸点とはその温度における蒸気圧が大気圧と等しくなる温度であるため、解を求める方程式として以下の式を用いた。
+
+$$fP=0.1013-exp\left(A+\cfrac{B}{CT}\right) \times 10^{-6}~~~~：式2$$
+
+また、この式を微分すると
+
+$$fP' = \cfrac{B}{(T+C)^2} exp\left(A+\cfrac{B}{CT}\right) \times 10^{-6}~~~~：式3$$
+
+となる。  
+Newton 法における沸点計算のフローチャートは以下の通りである。
+
+![沸点計算](名称未設定ファイルページ2.png){height=80mm}
+
+この計算によって得られた水，エタノールそれぞれの沸点を以下に示す。
+
+| 物質       | 沸点[K] | 沸点[℃] | 繰り返し[回] |
+| ---------- | ------- | ------- | ------------ |
+| 水         | 373.30  | 100.15  | 10           |
+| エタノール | 351.43  | 78.28   | 9            |
+
+以上から、(1)で得られた予想の通りエタノールの方が沸点が低く、沸騰しやすいことが言える。
+
+### (3)二成分系の沸点　
+
+二成分系の蒸気圧は以下の式で表される。
+
+$$P=y_1P+y_2P=\gamma_1x_1P_1^{\circ}+\gamma_2x_2P_2^{\circ}~~~~：式4$$
+
+$y_1,y_2$は気相組成であり、$x_1,x_2$は液相組成を表す。また、大抵の場合は低沸点成分を成分１として扱い、今回もそれに従いエタノールを成分１とした。$\gamma_1,\gamma_2$は活量係数であり、以下の Margules 式によって液相組成の関数で表される。
+
+$$ln\gamma_1={x_2}^2(A+2(B-A)x_1)$$
+$$ln\gamma_2={x_1}^2(B+2(A-B)x_2)$$
+
+また、$P_1^{\circ},P_2^{\circ}$は前 Antoine 式で求められる各成分の蒸気圧である。これらの式と２節で示したはさみうち法で、以下のように二成分系の気液平衡線図を描画した。
+
+![二成分系の沸点](名称未設定ファイル-ページ3.png){height=90mm}
+
+この方法で得られた結果は以下の図の通りである。
+
+![二成分系の気液平衡線図](図4.png){height=60mm}
+
+この図から、水とエタノールは共沸混合物であり、高エタノール組成の混合物の沸点は純エタノールのものとほぼ等しいということが言える。逆に低エタノール組成において曲線の傾きが大きいことから、水に少しエタノールが混ざった途端に急激に沸点が下がるということが言える。以上から、蒸留によって水とエタノールを分離した場合、得られるエタノールの組成は 0.9 ほどが限界であると推測できる。
+
+### (4)水の気液飽和密度
+
+ある温度・圧力における気体の密度$\rho$は状態方程式より求められる。理想気体の状態方程式においては
+
+$$Pv=RT$$
+
+である。ここで$v$はモル体積である。ここから、
+
+$$v=\cfrac{RT}{P}$$
+
+と言える。密度は
+
+$$\rho=\cfrac{Mw}{v}$$
+
+で表されるため、温度と圧力から密度を求めることが可能である。しかし、これは一次方程式であるため解を一つしか持たず、同温同圧の気液両相の二つの密度を算出する際には不十分である。故に今回は Peng-Robinson 状態方程式という三次方程式の形をとる状態方程式を用いた。
+
+$$P=\cfrac{RT}{v-b_T}-\cfrac{a_T}{v(v+b_T)+b_T(v-b_T)}$$
+
+また、$R,T,P,v$といった多変数を一つにまとめた無次元数として圧縮因子$Z$を以下の式で定義する。
+
+$$Z=\cfrac{Pv}{RT}$$
+
+圧縮因子を用いて上記の Peng-Robinson 式を記述すると
+
+$$f(Z)=Z^3-(1-B)Z^2+(A-3B^2-2B)Z-(AB-B^2-B^3)=0$$
+
+となる。ここで$A,B$は
+
+$$A=\cfrac{a_TP}{R^2T^2}~~~~B=\cfrac{b_TP}{RT}$$
+
+である。これも式を簡単にするため$Z$同様別の文字をおいた。ある温度・圧力での密度は上記の方程式の解となる圧縮因子$Z$を求めることと同義である。今回は気相・液相それぞれについて Newton 法で解を求めた。また、Newton 法において使用した$f(Z)$の微分の式は以下の通りである。
+
+$$f'(Z)=3Z ^ 2 -2(1-B)Z + (A -3B^2-2B)$$
+
+フローチャートを以下に示す。
+![気液平衡密度算出フロー](名称未設定ファイルページ4.png){height=90mm}
+
+また、比較用の実験値としてアメリカ国立標準技術研究所が提供する NIST Chemistry WebBook のデータを用いた。結果を以下のグラフに示す。
+
+![気液平衡密度](図n.png){height=60mm}
+
+Peng-Robinson 型状態方程式は Van-del-Waals の状態方程式に基づくものである。Van-del-Waals 状態方程式は分子を剛体球としてみなし、分子間相互作用も分子の有効体積という形で 2 つのパラメーターで表している。さらにこれを水分子は極性を持ち、水素結合を形成するため剛体球としての近似では正確に挙動を説明できないと考える。また、今回の実験ではフガシティーを考慮しておらず、液相と気相の化学ポテンシャルが等しいという強い過程の元計算を行っている。分子間相互作用の影響は分子間の距離がより近い液相の方が大きくなるため、液相の密度が NIST のデータと大きく異なったと考える。
+
+## 5. 課題
+
+### 1.
+
+2 節で述べた原理より、Newton 法は
+
+$$x_{n+1}=x_{n}-\frac{f\left(x_{n}\right)}{f^{\prime}\left(x_{n}\right)}$$
+
+という漸化式の収束によって解を決定する。求めた$x_n$おいて$f(x_n)$が十分 0 に近ければ収束したとみなせるため、収束条件として十分小さい$\epsilon$を用いて
+
+$$|f(x_n)|<\epsilon$$
+
+を用いることも可能である。
+
+### 2.
+
+| 物質       | 沸点[K] | 沸点[℃] | 繰り返し[回] |
+| ---------- | ------- | ------- | ------------ |
+| メタノール | 337.77  | 64.62   | 9            |
+| アセトン   | 329.39  | 56.24   | 8            |
+
+### 3.
+
+![水＋エタノール，アセトン，メタノール](図n+1.png){height=60mm}
+
+### 4.
+
+出力結果は添付の Excel ファイルを参照されたい。気相の繰り返し回数の方が多くなった。これは気相密度の初期と大きく異なることが原因であると考えた。ここで初期値を 1000，100，10，1 と変化させて繰り返し数の平均をとった表を以下に示す。
+
+| 初期値     | 1000 | 100  | 10   | 1    |
+| ---------- | ---- | ---- | ---- | ---- |
+| 繰り返し数 | 25.6 | 19.8 | 14.1 | 6.58 |
+
+また、温度が高くなるにつれて収束に時間がかかる傾向があることがわかった。これは$f(Z)=0$近傍での$f(Z)$の傾き(導関数)が大きくなる
+ためであると考える。
+
+### 5.
+
+メタノール・トルエン・ベンゼンについて水と同様に Penn-Robinson 式で求めた気液平衡時の密度と NIST のデータを同一グラフ上にプロットした。
+
+![メタノール/NIST](メタノールvs水.png){height=60mm}
+
+![トルエン/NIST](トルエン.png){height=60mm}
+
+![ベンゼン/NIST](ベンゼン.png){height=60mm}
+
+エタノールに関しては 4 節の水のデータと同様、液相密度においてずれが生じたがトルエン・ベンゼンでは NIST と近い値が得られた。これは実験値とのズレが分子の極性により生じるという予想と一致する結果であった。気相密度は全ての物質において NIST のデータとほぼ一致した。これは Peng-Robinson 式が気体、つまり分子同士の距離が遠く相互作用を起こしにくい状態の状態方程式として正確であるということを示していると考える。
+
+## 5. 結言
+
+今回の実験を通して、基本的な VBA の言語体系を学ぶことに加え、数値計算に用いられるアルゴリズムについて知識を深めることができた。また、各物理量について関係式を概観したことにより、熱化学の知識も深めることができたと言える。
+
+## 6. 感想
+
+VBA によるプログラミングは以前にも経験があるが、Excel に紐づいていること、制御構文の種類が少ないこと、出力によるデバッグが行いにくいことなどを問題に感じた。しかし、VB は実行環境の整備が簡便であるというメリットがある。これらを踏まえて、Google Colaboratory など、環境構築が不要なクラウドサービスを用いて別の言語で実習を行うことを提案したいと思う。
+
+## 7. 出典等
+
+#### 図の出典
+
+- 図 1 技術計算製作所 https://gijyutsu-keisan.com/science/numcal/newton/newton_1.php
+
+- 図 2 エクセルを用いた２分法による非線形方程式の計算 http://godfoot.world.coocan.jp/excel_nibun.htm
+
+#### 参考文献
+
+- Peng-Robinson 状態方程式の異種分子間相互作用パラメータの相関　著:新井努,西海英雄 掲載：大学工学部研究集報(昭和 62 年 3 月第 23 号）
+- 三次状態方程式の特性と気液平衡の推算に関する研究　著：足達義則　掲載：東北大学工学研究科博士論文
+- 混合系の気液・液液平衡の測定と推算　著：本郷尤,猪股宏 掲載：熱物性 7/1(1993)
+- 3 次状態方程式による液相密度計算における精度向上の試み 著：福地賢治・古屋武・吉川喜次・荒井康彦　掲載：化学工学論文集（1998 年 3 月 4 日 受理）
+- 実在気体の状態方程式の引力項に対する新 しいモデリング 著：中西為雄 掲載：日本機械 学会論文集(B 編)74 巻 741 号(2008-5)
+- van 　 der 　 Waals 状態方程式の改良 著：長谷昌紀，芹田可奈緒 掲載：電気化学（63，No，5（1995））
+- NIST Chemistry WebBook, SRD 69
+  https://webbook.nist.gov/chemistry/
+
+### ソースコード
+
+#### (1)水およびエタノールの蒸気圧曲線
+
+```Visual Basic
+Sub antoineEq()
+
+'Antoine定数
+Dim AN As Double
+Dim BN As Double
+Dim CN As Double
+'蒸気圧
+Dim P0 As Double
+'温度
+Dim T As Double
+'臨界温度
+Dim Tc As Double
+'繰り返し数
+Dim i As Integer
+
+AN = Cells(5, 1).Value
+BN = Cells(5, 2).Value
+CN = Cells(5, 3).Value
+Tc = Cells(5, 4).Value
+T = Cells(5, 5).Value
+
+For i = 1 To 1000
+
+'Antoine式 (q1)
+P0 = Exp(AN + BN / (T + CN))
+
+'温度T出力 (q2)
+Cells(i + 8, 3) = T
+'蒸気圧P0出力 (q3)
+Cells(i + 8, 4) = P0 * 10 ^ (-6)
+
+
+If Abs(Tc - T) < 20 Then
+GoTo finish
+Else
+'温度の更新(q4)
+
+T = T + 5
+End If
+
+Next i
+finish:
+
+End Sub
+
+```
+
+#### (2)水およびエタノールの沸点
+
+```Visual Basic
+Sub bp()
+
+'Antoine定数
+Dim AN As Double
+Dim BN As Double
+Dim CN As Double
+'温度
+Dim T As Double
+'Newton法
+Dim fP As Double
+Dim dfP As Double
+'繰り返し数
+Dim i As Integer
+
+AN = Cells(5, 1).Value
+BN = Cells(5, 2).Value
+CN = Cells(5, 3).Value
+T = Cells(5, 4).Value
+
+For i = 1 To 1000
+'Newton法で使う式2つ(q1,q2)
+fP = 0.1013 - Exp(AN + BN / (T + CN)) * 10 ^ (-6)
+dfP = BN / (T + CN) ^ 2 * Exp(AN + BN / (T + CN)) * 10 ^ (-6)
+
+
+'Newton法で使う条件分岐など(q3-q7)
+If Abs(fP / dfP) < 10 ^ (-6) Then
+GoTo finish
+
+Else
+T = T - fP / dfP
+End If
+Next i
+finish:
+
+Cells(9, 3) = T
+Cells(9, 4) = T - 273.15
+Cells(9, 5) = i
+
+End Sub
+```
+
+#### (3)水＋エタノール混合系の沸点
+
+```Visual Basic
+Sub Water_Ethanol()
+'Antoine定数 (Ethanol)
+Dim AN1 As Double
+Dim BN1 As Double
+Dim CN1 As Double
+'Antoine定数 (Water)
+Dim AN2 As Double
+Dim BN2 As Double
+Dim CN2 As Double
+
+'活量係数
+Dim gamma1 As Double
+Dim gamma2 As Double
+'Margules定数
+Dim AM As Double
+Dim BM As Double
+
+'はさみうち法に用いる3つの温度
+Dim TH As Double
+Dim TL As Double
+Dim TM As Double
+
+'エタノール(1)および水(2)の組成
+Dim x1 As Double
+Dim x2 As Double
+
+'はさみうち法の際のTLおよびTHにおける蒸気圧および全圧
+Dim PL1 As Double
+Dim PL2 As Double
+Dim fPL As Double
+Dim PH1 As Double
+Dim PH2 As Double
+Dim fPH As Double
+
+'はさみうち法の際のTMにおける蒸気圧および全圧
+
+Dim PM1 As Double
+Dim PM2 As Double
+Dim fPM As Double
+
+'For文で用いる変数（整数）
+Dim i As Integer
+Dim j As Integer
+
+'パラメータの入力
+AN1 = Cells(5, 2).Value
+BN1 = Cells(5, 3).Value
+CN1 = Cells(5, 4).Value
+
+AN2 = Cells(6, 2).Value
+BN2 = Cells(6, 3).Value
+CN2 = Cells(6, 4).Value
+
+AM = Cells(5, 5).Value
+BM = Cells(5, 6).Value
+
+x1 = 0
+
+For i = 1 To 1000
+'初期温度TLおよびTH（K単位）(q1-2)
+TL = Cells(5, 7).Value
+TH = Cells(6, 7).Value
+
+x2 = 1 - x1
+
+'Margules式
+gamma1 = Exp(x2 ^ 2 * (AM + 2 * (BM - AM) * x1))
+gamma2 = Exp(x1 ^ 2 * (BM + 2 * (AM - BM) * x2))
+
+For j = 1 To 1000
+'TLにおける各成分蒸気圧(PL1, PL2)，および大気圧と全圧の差(fPL)(q3-5)
+PL1 = Exp(AN1 + BN1 / (TL + CN1))
+PL2 = Exp(AN2 + BN2 / (TL + CN2))
+fPL = 0.1013 - ((PL1 * gamma1 * x1 + PL2 * gamma2 * x2) * 10 ^ (-6))
+'THにおける各成分蒸気圧(PH1, PH2)，および大気圧と全圧の差(fPH)(q6-8)
+PH1 = Exp(AN1 + BN1 / (TH + CN1))
+PH2 = Exp(AN2 + BN2 / (TH + CN2))
+fPH = 0.1013 - ((PH1 * gamma1 * x1 + PH2 * gamma2 * x2) * 10 ^ (-6))
+'TMの算出 (q9)
+TM = (TH - TL) * fPL / (fPL - fPH) + TL
+
+'TMにおける各成分蒸気圧(PM1, PM2)，および大気圧と全圧の差(fPM) (q10-12)
+PM1 = Exp(AN1 + BN1 / (TM + CN1))
+PM2 = Exp(AN2 + BN2 / (TM + CN2))
+fPM = 0.1013 - ((PM1 * gamma1 * x1 + PM2 * gamma2 * x2) * 10 ^ (-6))
+
+'はさみうち法
+If Abs(fPM) < 1E-06 Then
+TM = TM
+GoTo finish
+ElseIf fPH * fPM < 0 Then
+'(どちらかの点の更新q13)
+TL = TM
+ElseIf fPH * fPM > 0 Then
+'(どちらかの点の更新q14)
+TH = TM
+End If
+
+Next j
+
+'データ出力　(q15-18)
+finish:
+If x1 <= 1 Then
+x1 = x1 + 0.05
+Cells(10 + i, 3) = x1
+Cells(10 + i, 4) = TM
+Cells(10 + i, 5) = TM - 273.15
+Cells(10 + i, 6) = j
+End If
+
+Next i
+
+
+End Sub
+```
+
+#### (4)水の気液飽和密度
+
+```
+Sub PR()
+
+'Antoine式
+Dim AN As Double
+Dim BN As Double
+Dim CN As Double
+
+'温度
+Dim T As Double
+'蒸気圧＝圧力
+Dim P0 As Double
+
+'分子量[g/mol]，臨界温度[K]，臨界圧力[MPa]，臨界圧力[Pa]，偏心因
+Dim Mw As Double
+Dim Tc As Double
+Dim MPc As Double
+Dim Pc As Double
+Dim w As Double
+
+'気体定数
+Const R As Double = 8.314
+
+'Peng-Robison状態方程式各種パラメータ
+Dim Tr As Double
+Dim AA As Double
+Dim BB As Double
+Dim aT As Double
+Dim bT As Double
+Dim aTc As Double
+Dim bTc As Double
+Dim m As Double
+Dim alpha As Double
+
+'気相のf(Z)、f'(Z)、Z
+Dim fZv As Double
+Dim dfZv As Double
+Dim Zv As Double
+
+'気相のモル体積[m3/mol]と密度[g/cm3]
+Dim Vv As Double
+Dim rhov As Double
+
+'液相のf(Z)、f'(Z)、Z
+Dim fZl As Double
+Dim dfZl As Double
+Dim Zl As Double
+
+'液相のモル体積[m3/mol]と密度[g/cm3]
+Dim Vl As Double
+Dim rhol As Double
+
+'For文で用いる変数
+Dim i As Integer
+Dim j As Integer
+Dim k As Integer
+
+
+'パラメータの入力
+AN = Cells(5, 2).Value
+BN = Cells(5, 3).Value
+CN = Cells(5, 4).Value
+Mw = Cells(5, 5).Value
+Tc = Cells(5, 6).Value
+MPc = Cells(5, 7).Value
+Pc = MPc * 10 ^ 6
+w = Cells(5, 8).Value
+T = Cells(5, 9).Value
+
+
+'5K刻みfor roop'
+For i = 1 To 1000
+
+'Antoine'
+P0 = Exp(AN + BN / (T + CN))
+
+'Peng-Robinson'
+'Tr "Tr" [-]
+Tr = T / Tc
+'m "m"
+m = 0.37464 + 1.54226 * w - 0.26992 * w ^ 2
+'alpha "??"
+alpha = (1 + m * (1 - Tr ^ 0.5)) ^ 2
+'aTc "a(Tc)"
+aTc = 0.45724 * R ^ 2 * Tc ^ 2 / Pc
+'bTc "b(Tc)"
+bTc = 0.0778 * R * Tc / Pc
+'aT "a"
+aT = alpha * aTc
+'bT "b"
+bT = bTc
+'AA "A"
+AA = aT * P0 / (R ^ 2 * T ^ 2)
+'BB "B"
+BB = bT * P0 / (R * T)
+
+
+' 液相密度初期値
+Zl = 0.0001
+
+'液相密度のNewton法
+For j = 1 To 1000
+fZl = Zl ^ 3 - (1 - BB) * Zl ^ 2 + (AA - 3 * BB ^ 2 - 2 * BB) * Zl - (AA * BB - BB ^ 2 - BB ^ 3)
+dfZl = 3 * Zl ^ 2 - 2 * (1 - BB) * Zl + (AA - 3 * B ^ 2 - 2 * B)
+
+If Abs(fZl / dfZl) < 10 ^ (-6) Then
+GoTo finishl
+Else
+Zl = Zl - fZl / dfZl
+End If
+Next j
+
+finishl:
+Vl = Zl * R * T / P0
+rhol = Mw * 10 ^ -6 / Vl
+Cells(8 + i, 5) = rhol
+Cells(8 + i, 7) = j
+
+
+' 気相密度の初期値
+Zv = 1000
+'液相の密度計算Newton法
+For k = 1 To 1000
+fZv = Zv ^ 3 - (1 - BB) * Zv ^ 2 + (AA - 3 * BB ^ 2 - 2 * BB) * Zv - (AA * BB - BB ^ 2 - BB ^ 3)
+dfZv = 3 * Zv ^ 2 - 2 * (1 - BB) * Zv + (AA - 3 * B ^ 2 - 2 * B)
+
+If Abs(fZv / dfZv) < 10 ^ (-6) Then
+GoTo finishv
+Else
+Zv = Zv - fZv / dfZv
+End If
+
+Next k
+finishv:
+Vv = Zv * R * T / P0
+rhov = Mw * 10 ^ -6 / Vv
+Cells(8 + i, 6) = rhov
+Cells(8 + i, 8) = k
+
+Cells(8 + i, 3) = T
+Cells(8 + i, 4) = P0 * 10 ^ (-6)
+
+'臨界温度Tcとの差が20℃になったら計算をやめる
+'温度を5℃あげる。(q
+If Abs(T - Tc) < 20 Then
+GoTo finish
+Else
+T = T + 5
+End If
+
+Next i
+finish:
+
+End Sub
+
+```
+
+#### 課題(3)
+
+```
+Sub two_substitute()
+
+'Antoine定数 (Ethanol)
+Dim AN1 As Double
+Dim BN1 As Double
+Dim CN1 As Double
+'Antoine定数 (Water)
+Dim AN2 As Double
+Dim BN2 As Double
+Dim CN2 As Double
+
+'活量係数
+Dim gamma1 As Double
+Dim gamma2 As Double
+'Margules定数
+Dim AM As Double
+Dim BM As Double
+
+'はさみうち法に用いる3つの温度
+Dim TH As Double
+Dim TL As Double
+Dim TM As Double
+
+'エタノール(1)および水(2)の組成
+Dim x1 As Double
+Dim x2 As Double
+
+'はさみうち法の際のTLおよびTHにおける蒸気圧および全圧
+Dim PL1 As Double
+Dim PL2 As Double
+Dim fPL As Double
+Dim PH1 As Double
+Dim PH2 As Double
+Dim fPH As Double
+
+'はさみうち法の際のTMにおける蒸気圧および全圧
+
+Dim PM1 As Double
+Dim PM2 As Double
+Dim fPM As Double
+
+'For文で用いる変数（整数）
+Dim i As Integer
+Dim j As Integer
+Dim k As Integer
+
+'繰り返し３回
+
+For k = 1 To 3
+
+'パラメータの入力
+AN1 = Cells(5, 2 + (k - 1) * 9).Value
+BN1 = Cells(5, 3 + (k - 1) * 9).Value
+CN1 = Cells(5, 4 + (k - 1) * 9).Value
+
+AN2 = Cells(6, 2 + (k - 1) * 9).Value
+BN2 = Cells(6, 3 + (k - 1) * 9).Value
+CN2 = Cells(6, 4 + (k - 1) * 9).Value
+
+AM = Cells(5, 5 + (k - 1) * 9).Value
+BM = Cells(5, 6 + (k - 1) * 9).Value
+
+x1 = 0
+
+For i = 1 To 1000
+'初期温度TLおよびTH（K単位）(q1-2)
+TL = Cells(5, 7 + (k - 1) * 9).Value
+TH = Cells(6, 7 + (k - 1) * 9).Value
+
+x2 = 1 - x1
+
+'Margules式
+gamma1 = Exp(x2 ^ 2 * (AM + 2 * (BM - AM) * x1))
+gamma2 = Exp(x1 ^ 2 * (BM + 2 * (AM - BM) * x2))
+
+For j = 1 To 1000
+'TLにおける各成分蒸気圧(PL1, PL2)，および大気圧と全圧の差(fPL)(q3-5)
+PL1 = Exp(AN1 + BN1 / (TL + CN1))
+PL2 = Exp(AN2 + BN2 / (TL + CN2))
+fPL = 0.1013 - ((PL1 * gamma1 * x1 + PL2 * gamma2 * x2) * 10 ^ (-6))
+'THにおける各成分蒸気圧(PH1, PH2)，および大気圧と全圧の差(fPH)(q6-8)
+PH1 = Exp(AN1 + BN1 / (TH + CN1))
+PH2 = Exp(AN2 + BN2 / (TH + CN2))
+fPH = 0.1013 - ((PH1 * gamma1 * x1 + PH2 * gamma2 * x2) * 10 ^ (-6))
+'TMの算出 (q9)
+TM = (TH - TL) * fPL / (fPL - fPH) + TL
+
+'TMにおける各成分蒸気圧(PM1, PM2)，および大気圧と全圧の差(fPM) (q10-12)
+PM1 = Exp(AN1 + BN1 / (TM + CN1))
+PM2 = Exp(AN2 + BN2 / (TM + CN2))
+fPM = 0.1013 - ((PM1 * gamma1 * x1 + PM2 * gamma2 * x2) * 10 ^ (-6))
+
+'はさみうち法
+If Abs(fPM) < 1E-06 Then
+TM = TM
+GoTo finish
+ElseIf fPH * fPM < 0 Then
+'(どちらかの点の更新q13)
+TL = TM
+ElseIf fPH * fPM > 0 Then
+'(どちらかの点の更新q14)
+TH = TM
+End If
+
+Next j
+
+'データ出力　(q15-18)
+
+finish:
+If x1 < 1 Then
+x1 = x1 + 0.05
+Cells(10 + i, 3 + (k - 1) * 9) = x1
+Cells(10 + i, 4 + (k - 1) * 9) = TM
+Cells(10 + i, 5 + (k - 1) * 9) = TM - 273.15
+Cells(10 + i, 6 + (k - 1) * 9) = j
+
+End If
+
+Next i
+
+Next k
+
+End Sub
+```
