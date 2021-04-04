@@ -1,0 +1,168 @@
+<HEAD>
+	<TITLE>簡単レポート-1210-2</TITLE>
+	<!--
+		All Rights Reserved,(c) Shimadzu Corp. 2002
+	-->
+<STYLE TYPE="text/css">
+TD {
+	font-size: 9pt;
+	font-family: monospace;
+}
+H2 {
+	font-size: 14pt;
+	border-style: none none solid none;
+	border-width: 0pt 0pt medium 0pt;
+}
+H3 {
+	margin-bottom: 2pt;
+	font-size: 10pt;
+}
+#MeasCond {
+	font-size: 9pt;
+	font-family: monospace;
+	margin-top: 2pt;
+	margin-bottom: 2pt;
+}
+#PeakList {
+	font-size: 9pt;
+	font-family: monospace;
+	margin-top: 2pt;
+	margin-bottom: 2pt;
+}
+#QnResult {
+	font-size: 9pt;
+	font-family: monospace;
+	margin-top: 2pt;
+	margin-bottom: 2pt;
+}
+#SampleInfo {
+	padding-left: 5pt;
+}
+#MeasCondT {
+	font-size: 9pt;
+	font-family: monospace;
+}
+#PeakListT {
+	font-size: 9pt;
+	font-family: monospace;
+}
+#QnResultT {
+	font-size: 9pt;
+	font-family: monospace;
+}
+</STYLE>
+	<SCRIPT SRC="../bin/Report_ext.js"></SCRIPT>
+</HEAD>
+
+<BODY BGCOLOR="#ffffff">
+
+<!-- Title Start -->
+<H2>簡単レポート</H2>
+<!-- Title End -->
+
+<!-- SampleImage-SampleInfo Start -->
+
+<TABLE CELLPADDING=0 CELLSPACING=0>
+<TR>
+<!-- SampleImage Start -->
+<TD ALIGN=LEFT VALIGN=TOP>
+<H3 id='SampleImageT'>
+<A NAME="TopSampleImage"></A>
+[<A HREF="#TopSampleImage" onClick="switch_SampleImage_explanation();return false">試料画像</A>]
+</H3>
+<TABLE ID="SampleImage" CELLPADDING=0 CELLSPACING=0>
+<TR><TD>
+試料画像なし
+</TD></TR>
+</TABLE>
+</TD>
+<!-- SampleImage End -->
+
+<!-- SampleInfo Start -->
+<TD ALIGN=LEFT VALIGN=TOP>
+<H3 id='SampleInfoT'>
+<A NAME="TopSampleInfo"></A>
+[<A HREF="#TopSampleInfo" onClick="switch_SampleInfo_explanation();return false">試料情報</A>]
+</H3>
+<TABLE ID="SampleInfo" CELLPADDING=0 CELLSPACING=0>
+<TR><TD>試料名</TD>
+<TD>: 1210-2</TD></TR>
+<TR><TD>オペレータ</TD>
+<TD>: maruyama</TD></TR>
+<TR><TD>コメント</TD>
+<TD>: 1ch,100sec</TD></TR>
+<TR><TD>分析グループ</TD>
+<TD>: 簡単-100</TD></TR>
+<TR><TD>測定日時</TD>
+<TD>: 2020-12-10 16:20:48</TD></TR>
+<TR><TD>測定位置(mm)</TD>
+<TD>: ( 31.263, 45.985,33.14)</TD></TR>
+<TR><TD>分析径</TD>
+<TD>: 50um</TD></TR>
+</TABLE>
+
+</TD>
+<!-- SampleInfo End -->
+
+</TR>
+</TABLE>
+<!-- SampleImage-SampleInfo End -->
+
+<BR><BR>
+<!-- Profile Start -->
+<TABLE CELLPADDING=0 CELLSPACING=0>
+<TR><TD>
+<H3 id='ProfileT'>
+<A NAME="TopProfile"></A>
+[<A HREF="#TopProfile" onClick="switch_Profile_explanation();return false">プロファイル</A>]
+</H3>
+</TD></TR>
+<TR>
+<TD ID="Profile">
+<IMG SRC="C:\microedx\temp\1210-2_Profile.bmp" ALIGN=LEFT>
+</TD></TR>
+</TABLE>
+<!-- Profile End -->
+
+<BR><BR>
+<!-- MeasCond Start -->
+<A NAME='TopMeasCond'></A>
+<H3 id='MeasCondT'>[<A HREF="#TopMeasCond" onClick="switch_MeasCond_explanation();return false">測定条件</A>]</H3>
+<PRE ID='MeasCond'>
+------------------------------------------------------------------------
+装置:microEDX-1300[Si(Li):S]     分析径:50um
+ 
+------------------------------------------------------------------------
+測定チャンネル        TG kV  uA       Fl 取込  解析(keV)  Time(sec) DT%
+------------------------------------------------------------------------
+Na-U                  Rh 50 1000-Auto -- 0-40  0.00-40.00 LT:   100  23
+</PRE>
+<BR><BR>
+<!-- PeakList Start -->
+<A NAME='TopPeakList'></A>
+<H3 id='PeakListT'>[<A HREF="#TopPeakList" onClick="switch_PeakList_explanation();return false">ピークリスト</A>]</H3>
+<PRE ID='PeakList'>
+------------------------------------------------------------
+チャンネル名          Line       keV     Net強度(cps/uA)
+------------------------------------------------------------
+Na-U                  ----       4.16      0.009          F
+                      BaLa       4.50      0.036         QF
+                      TiKa       4.50      0.013         QF
+                      BaLb1      4.86      0.029          F
+                      TiKb       4.93      0.002          F
+                      BaLb2      5.19      0.008          F
+------------------------------------------------------------
+</PRE>
+<BR><BR>
+<!-- QnResult Start -->
+<A NAME='TopQnResult'></A>
+<H3 id='QnResultT'>[<A HREF="#TopQnResult" onClick="switch_QnResult_explanation();return false">定量分析結果</A>]</H3>
+<PRE ID='QnResult'>
+-----------------------------------------------------------------------------------
+分析対象                分析結果            誤差   処理-計算  分析線   強度(cps/uA)
+-----------------------------------------------------------------------------------
+Ba                      74.0125 atom%       1.6395 定量-FP    BaLa          0.036
+Ti                      25.9875 atom%       1.6135 定量-FP    TiKa          0.013
+</PRE>
+</BODY>
+</HTML>
